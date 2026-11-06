@@ -98,6 +98,7 @@ test('asigna a la primera cuenta los datos antiguos que aún no tienen propietar
       nombre_usuario TEXT NOT NULL,
       nombre_normalizado TEXT NOT NULL UNIQUE,
       hash_contrasena TEXT NOT NULL,
+      rol TEXT NOT NULL DEFAULT 'usuario',
       creado_en TEXT DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE fotos_cargadas (usuario_id INTEGER);
@@ -117,5 +118,49 @@ test('asigna a la primera cuenta los datos antiguos que aún no tienen propietar
   for (const tabla of ['fotos_cargadas', 'preguntas', 'examenes']) {
     assert.equal(db.prepare(`SELECT usuario_id FROM ${tabla}`).get().usuario_id, usuario.id);
   }
+  db.close();
+});
+
+test('configura una cuenta administradora y elimina sus sesiones antiguas', async () => {
+  const db = new Database(':memory:');
+  db.exec(`
+    CREATE TABLE usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre_usuario TEXT NOT NULL,
+      nombre_normalizado TEXT NOT NULL UNIQUE,
+      hash_contrasena TEXT NOT NULL,
+      rol TEXT NOT NULL DEFAULT 'usuario',
+      creado_en TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE sesiones (
+      token_hash TEXT PRIMARY KEY,
+      usuario_id INTEGER NOT NULL
+    );
+    CREATE TABLE fotos_cargadas (usuario_id INTEGER);
+    CREATE TABLE preguntas (usuario_id INTEGER);
+    CREATE TABLE examenes (usuario_id INTEGER);
+  `);
+  const repositorio = new SQLiteAuthRepository(db);
+  const seguridad = new CryptoSeguridadAutenticacion();
+  const hashAnterior = await seguridad.crearHashContrasena('contrasena-anterior');
+  const usuario = await repositorio.guardar({
+    nombreUsuario: 'admin',
+    nombreNormalizado: 'admin',
+    hashContrasena: hashAnterior
+  });
+  db.prepare('INSERT INTO sesiones (token_hash, usuario_id) VALUES (?, ?)').run('sesion-anterior', usuario.id);
+
+  const hashConfigurado = await seguridad.crearHashContrasena('contrasena-configurada-segura');
+  const id = await repositorio.configurarAdministrador({
+    nombreUsuario: 'admin',
+    nombreNormalizado: 'admin',
+    hashContrasena: hashConfigurado
+  });
+  const admin = await repositorio.buscarPorNombreNormalizado('admin');
+
+  assert.equal(id, usuario.id);
+  assert.equal(admin.rol, 'admin');
+  assert.equal(await seguridad.verificarContrasena('contrasena-configurada-segura', admin.hashContrasena), true);
+  assert.equal(db.prepare('SELECT COUNT(*) AS total FROM sesiones').get().total, 0);
   db.close();
 });

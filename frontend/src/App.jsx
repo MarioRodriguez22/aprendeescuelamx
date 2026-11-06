@@ -5,6 +5,7 @@ import ConfigurarExamen from './pages/ConfigurarExamen.jsx';
 import Examen from './pages/Examen.jsx';
 import Resultados from './pages/Resultados.jsx';
 import Acceso from './pages/Acceso.jsx';
+import PanelAdmin from './pages/PanelAdmin.jsx';
 import { api } from './services/api.js';
 
 const estilos = `
@@ -60,6 +61,12 @@ p{line-height:1.55}.boton{display:block;width:100%;border:0;border-radius:16px;p
 .foto-guardada strong{display:block;overflow-wrap:anywhere;margin-top:8px}
 .foto-guardada p{font-size:.85rem;margin:6px 0}
 .texto-foto-guardada{max-height:150px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.acciones-sesion{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.acciones-sesion button{border:0;background:#ffe5c4;color:#61391d;border-radius:10px;padding:9px 12px;font-weight:bold}
+.tabla-usuarios{overflow-x:auto}
+.tabla-usuarios table{width:100%;border-collapse:collapse;text-align:left}
+.tabla-usuarios th,.tabla-usuarios td{padding:12px 8px;border-bottom:1px solid #f0dcc3}
+.tabla-usuarios th{color:#7a3e18}
 @media(min-width:600px){.pantalla{padding-top:36px}.centrado{padding-top:14vh}.resultado-principal{padding-top:2vh}}
 `;
 
@@ -68,7 +75,8 @@ const rutas = {
   subir: '/subir-fotos',
   configurar: '/configurar-examen',
   examen: '/examen',
-  resultados: '/resultados'
+  resultados: '/resultados',
+  admin: '/admin'
 };
 
 function pantallaDesdeRuta() {
@@ -84,6 +92,7 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
   const [errorSesion, setErrorSesion] = useState('');
+  const [mostrarAdmin, setMostrarAdmin] = useState(false);
 
   useEffect(() => {
     let activa = true;
@@ -149,17 +158,30 @@ export default function App() {
         <>
           <div className="sesion-activa">
             <span>Cuenta: <strong>{usuario.nombreUsuario}</strong></span>
-            <button type="button" onClick={salir}>Cerrar sesión</button>
+            <div className="acciones-sesion">
+              {usuario.rol === 'admin' && (
+                <button type="button" onClick={() => ir('admin')}>
+                  Panel de administración
+                </button>
+              )}
+              <button type="button" onClick={salir}>Cerrar sesión</button>
+            </div>
           </div>
           {errorSesion && <p className="error" role="alert">{errorSesion}</p>}
-          {pantalla === 'inicio' && <Inicio ir={ir} />}
-          {pantalla === 'subir' && <SubirFotos alSeleccionar={(contenido, materia) => {
-            setTexto(contenido);
-            setMateriaInicial(materia);
-          }} ir={ir} />}
-          {pantalla === 'configurar' && <ConfigurarExamen texto={texto} materiaInicial={materiaInicial} alCrear={setExamen} ir={ir} />}
-          {pantalla === 'examen' && examen && <Examen examen={examen} alTerminar={setResultado} ir={ir} />}
-          {pantalla === 'resultados' && <Resultados resultado={resultado} ir={ir} />}
+          {pantalla === 'admin' && usuario.rol === 'admin'
+            ? <PanelAdmin alVolver={() => ir('inicio')} />
+            : pantalla === 'admin'
+              ? <main className="pantalla"><h1>Acceso restringido</h1><p>El panel de administración solo está disponible para administradores.</p></main>
+              : <>
+                {pantalla === 'inicio' && <Inicio ir={ir} />}
+                {pantalla === 'subir' && <SubirFotos alSeleccionar={(contenido, materia) => {
+                  setTexto(contenido);
+                  setMateriaInicial(materia);
+                }} ir={ir} />}
+                {pantalla === 'configurar' && <ConfigurarExamen texto={texto} materiaInicial={materiaInicial} alCrear={setExamen} ir={ir} />}
+                {pantalla === 'examen' && examen && <Examen examen={examen} alTerminar={setResultado} ir={ir} />}
+                {pantalla === 'resultados' && <Resultados resultado={resultado} ir={ir} />}
+              </>}
         </>
       )}
     </>

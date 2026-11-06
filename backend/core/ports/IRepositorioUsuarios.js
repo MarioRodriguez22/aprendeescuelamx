@@ -10,4 +10,8 @@ export class IRepositorioUsuarios {
   async guardar() {
     throw new Error('IRepositorioUsuarios.guardar debe implementarse.');
   }
+
+  async listar() {
+    throw new Error('IRepositorioUsuarios.listar debe implementarse.');
+  }
 }

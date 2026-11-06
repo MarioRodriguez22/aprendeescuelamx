@@ -14,6 +14,8 @@ export const env = Object.freeze({
   port: enteroPositivo(process.env.PORT, 3000, 'PORT'),
   dbPath: process.env.DB_PATH || './data/aprende-escuela-mx.sqlite',
   aiProvider: (process.env.AI_PROVIDER || 'demo').toLowerCase(),
+  adminUsername: process.env.ADMIN_USERNAME?.trim() || '',
+  adminPassword: process.env.ADMIN_PASSWORD || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',

@@ -6,6 +6,7 @@ import { preguntaRouter } from './routes/pregunta.routes.js';
 import { crearRouterAutenticacion } from './routes/autenticacion.routes.js';
 import { crearMiddlewareAutenticacion } from './middlewares/autenticacion.js';
 import { autenticacion } from '../../config/container.js';
+import { administracionRouter } from './routes/administracion.routes.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -16,6 +17,7 @@ app.use('/api/autenticacion', crearRouterAutenticacion(autenticacion, {
   cookiesSeguras: process.env.NODE_ENV === 'production'
 }));
 const requiereSesion = crearMiddlewareAutenticacion(autenticacion);
+app.use('/api/administracion', requiereSesion, administracionRouter);
 app.use('/api/examenes', requiereSesion, examenRouter);
 app.use('/api/preguntas', requiereSesion, preguntaRouter);
 

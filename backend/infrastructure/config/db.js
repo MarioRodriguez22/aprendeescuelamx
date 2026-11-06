@@ -15,6 +15,7 @@ db.exec(`
     nombre_usuario TEXT NOT NULL,
     nombre_normalizado TEXT NOT NULL UNIQUE,
     hash_contrasena TEXT NOT NULL,
+    rol TEXT NOT NULL DEFAULT 'usuario' CHECK (rol IN ('usuario', 'admin')),
     creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS sesiones (
@@ -79,6 +80,10 @@ db.exec(`
     ON preguntas(materia, grado, hash_texto);
 `);
 
+const columnasUsuarios = db.pragma('table_info(usuarios)');
+if (!columnasUsuarios.some((columna) => columna.name === 'rol')) {
+  db.exec("ALTER TABLE usuarios ADD COLUMN rol TEXT NOT NULL DEFAULT 'usuario'");
+}
 const columnasPreguntas = db.pragma('table_info(preguntas)');
 if (!columnasPreguntas.some((columna) => columna.name === 'usuario_id')) {
   db.exec('ALTER TABLE preguntas ADD COLUMN usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE');

@@ -81,6 +81,9 @@ export const api = {
   cerrarSesion() {
     return solicitar('/autenticacion/cerrar-sesion', { method: 'POST' });
   },
+  listarUsuarios() {
+    return solicitar('/administracion/usuarios');
+  },
   extraerTexto(archivos) {
     const datos = new FormData();
     archivos.forEach((archivo) => datos.append('fotos', archivo));

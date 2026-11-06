@@ -17,14 +17,35 @@ import { GenerarExamen } from '../../core/use-cases/GenerarExamen.js';
 import { CalificarExamen } from '../../core/use-cases/CalificarExamen.js';
 import { ClasificarFotos } from '../../core/use-cases/ClasificarFotos.js';
 import { AutenticarUsuario } from '../../core/use-cases/AutenticarUsuario.js';
+import { ListarUsuarios } from '../../core/use-cases/ListarUsuarios.js';
 
 export const repositorio = new SQLiteRepository(db);
 const repositorioAutenticacion = new SQLiteAuthRepository(db);
+const seguridadAutenticacion = new CryptoSeguridadAutenticacion();
 export const autenticacion = new AutenticarUsuario(
   repositorioAutenticacion,
   repositorioAutenticacion.repositorioSesiones,
-  new CryptoSeguridadAutenticacion()
+  seguridadAutenticacion
 );
+export const listarUsuarios = new ListarUsuarios(repositorioAutenticacion);
+
+if (Boolean(env.adminUsername) !== Boolean(env.adminPassword)) {
+  throw new Error('Configura ADMIN_USERNAME y ADMIN_PASSWORD juntos en backend/.env.');
+}
+if (env.adminUsername) {
+  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(env.adminUsername)) {
+    throw new Error('ADMIN_USERNAME debe tener de 3 a 32 letras, números, puntos, guiones o guiones bajos.');
+  }
+  if (env.adminPassword.length < 12 || env.adminPassword.length > 128) {
+    throw new Error('ADMIN_PASSWORD debe tener entre 12 y 128 caracteres.');
+  }
+  const hashContrasena = await seguridadAutenticacion.crearHashContrasena(env.adminPassword);
+  await repositorioAutenticacion.configurarAdministrador({
+    nombreUsuario: env.adminUsername,
+    nombreNormalizado: env.adminUsername.toLocaleLowerCase('es-MX'),
+    hashContrasena
+  });
+}
 
 function crearGenerador() {
   if (env.aiProvider === 'demo') return new DemoAdapter();

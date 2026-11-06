@@ -11,6 +11,7 @@ function presentarUsuario(usuario) {
   return {
     id: usuario.id,
     nombreUsuario: usuario.nombreUsuario,
+    rol: usuario.rol || 'usuario',
     creadoEn: usuario.creadoEn
   };
 }

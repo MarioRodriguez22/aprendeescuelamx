@@ -22,4 +22,11 @@ export function crearMiddlewareAutenticacion(autenticacion) {
   };
 }
 
+export function requerirAdministrador(req, res, next) {
+  if (req.usuario?.rol !== 'admin') {
+    return res.status(403).json({ error: 'Esta sección es solo para administradores.' });
+  }
+  next();
+}
+
 export { tokenDeCookie };
