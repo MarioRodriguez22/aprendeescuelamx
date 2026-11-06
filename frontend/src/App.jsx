@@ -92,7 +92,6 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
   const [errorSesion, setErrorSesion] = useState('');
-  const [mostrarAdmin, setMostrarAdmin] = useState(false);
 
   useEffect(() => {
     let activa = true;
